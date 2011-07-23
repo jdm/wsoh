@@ -261,7 +261,6 @@ void draw() {
         var node = nodeList[i];
 
         if(node.mouseOver) {
-            // println("show influence circle");
             // display an influence circle, opacity
             fill(color(255, 255, 255, 50));
             stroke(color(0,0,0,100));
@@ -280,7 +279,7 @@ void draw() {
         var node = nodeList[i];
         stroke(0);
         fill(0);
-        int base = 1.5;
+        int base = 1.5 + 5.0 * node.playing;
         for(int j=0; j < node.inputNodes.length; j++) {
             // input into this node
             var parent = node.inputNodes[j];
@@ -314,8 +313,6 @@ void draw() {
     displayUI(editUI);
     displayUI(volumeUI);
     displayUI(frequencyUI);
-
-    generateAudio();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -381,18 +378,18 @@ void mouseClicked() {
         if(pointOnUI(addUI, x,y)) {
             // if it's on the UI, pass on
 
-            // ### for now, insert here
-            // don't insert yet
-            var newNode = make_random_osc(addUI.x, addUI.y);
+            if (mouseButton == LEFT)
+                newNode = make_random_osc(x, y);
+            else
+                newNode = makeGate(x, y, 50);
+
             // add us as children if inside influence
-            for (int i = 0; i < nodeList.length; i++) {
-                var node = nodeList[i];
-                if (node.intersect.call(node, newNode)) {
-                    // newNode will take node as an influence
-                    node.inputNodes.push(newNode);
-                }
-            }
+            intersecting = generateIntersections(newNode);
+
             addNode(newNode);
+            if (intersecting.length != 0) {
+                reconnectNode(intersecting, newNode);
+            }
         }
         addUI.display = false;
     } else {
@@ -402,17 +399,7 @@ void mouseClicked() {
     }
 }
 
-/* 
-            // remove node, and all inputs
-            for (int j = 0; j < nodeList.length; j++) {
-                var k = nodeList[j].inputNodes.indexOf(node);
-                if(k != -1) {
-                    nodeList[j].inputNodes.splice(k, 1);
-                    nodeList[j].inputs.splice(k, 1);
-                }
-            }
-            removeNode(i);
-*/
+/* removeNode(i); node.disconnect.call(node); */
 
 void mouseDragged() {
     var x = mouseX, y = mouseY;
@@ -422,6 +409,9 @@ void mouseDragged() {
         if(node.pressed) {
             node.x = x;
             node.y = y;
+
+            intersecting = generateIntersections(node);
+            reconnectNode(intersecting, node);
         }
     }
     if(volumeUI.click)
