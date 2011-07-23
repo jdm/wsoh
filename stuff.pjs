@@ -6,7 +6,7 @@
 
 // constants
 int centreRadius = 25;
-int rate = 10;
+int rate = 30;
 
 // current beats per minute, doesn't allow for multiple bpms
 int curbpm = 0;

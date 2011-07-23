@@ -60,8 +60,10 @@ function generateIntersections(newNode) {
 }
 
 function reconnectNode(intersecting, newNode) {
-    if (intersecting.length == 0)
+    if (intersecting.length == 0) {
+      newNode.disconnect();
       return;
+    }
   
     intersecting = intersecting.sort(function(a, b) {
                                       var d1 = nodedist(a, newNode);
