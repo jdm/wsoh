@@ -340,6 +340,9 @@ void mouseDragged() {
         if(node.pressed) {
             node.x = x;
             node.y = y;
+
+            intersecting = generateIntersections(node);
+            reconnectNode(intersecting, node);
         }
     }
     if(volumeUI.click)

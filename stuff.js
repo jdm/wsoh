@@ -119,6 +119,7 @@ function Node(x, y, shape, modifySignal, opts) {
     this.generateSignal = generateSignal;
 
     this.connectOutputTo = function(node) {
+        this.disconnectFrom(this.outputNode);
         this.outputNode = node;
         if (!node.acceptMultipleInputs) {
             for (var i = 0; i < node.inputNodes.length; i++) {
@@ -129,18 +130,21 @@ function Node(x, y, shape, modifySignal, opts) {
             node.inputNodes.push(this);
         }
     };
-    this.disconnect = function() {
-        if (this.outputNode) {
+    this.disconnectFrom = function(node) {
+        if (this.outputNode && this.outputNode.id == node.id) {
             var idx = this.outputNode.inputNodes.indexOf(this);
             this.outputNode.inputNodes.splice(idx, 1);
             this.outputNode.inputs.splice(idx, 1);
         }
+    };
+    this.disconnect = function() {
+        this.disconnectFrom(this.outputNode);
         for (var i = 0; i < this.inputNodes.length; i++) {
             this.inputNodes[i].outputNode = null;
         }
         var output = this.outputNode;
         this.outputNode = null;
-        if (output) {          
+        if (output) {  
             var intersecting = generateIntersections(output);
             reconnectNode(intersecting, output);
         }
