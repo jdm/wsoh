@@ -176,6 +176,5 @@ function addNode(n) {
 }
 
 function removeNode(i) {
-  var node = nodeList[i];
   nodeList.splice(i, 1);
 }
