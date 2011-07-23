@@ -1,8 +1,9 @@
-int centreRadius = 25;
 int rate = 10;
 
 void setup() {
   size(screen.width, screen.height);
+  HomeNode.x = screen.width / 2;
+  HomeNode.y = screen.height / 2;
   frameRate(rate);
 }
 
@@ -13,10 +14,6 @@ void draw() {
   background(125);
   fill(255);
 
-  int x = width / 2 - centreRadius;
-  int y = height / 2 - centreRadius;
-  ellipse(x, y, centreRadius * 2, centreRadius * 2);
-  
   if (curbpm != bpm) {
     curbpm = bpm;
     ticks = curbpm / 60;
@@ -35,6 +32,8 @@ void draw() {
         break;
     }
   }
+
+  generateAudio();
 }
 
 void mouseClicked()
@@ -42,11 +41,11 @@ void mouseClicked()
   for (int i = 0; i < nodeList.length; i++) {
     var node = nodeList[i];
     if (node.pointInShape.call(node, mouseX, mouseY)) {
-      nodeList.splice(i, 1);
+      removeNode(i);
       return;
     }
   }
   int x = mouseX;
   int y = mouseY;
-  nodeList.push(make_random_osc(x, y));
+  addNode(make_random_osc(x, y));
 }
