@@ -1,3 +1,5 @@
+/* -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 ////////////////////////////////////////////////////////////////////////////////
 // stuff.pjs
 ////////////////////////////////////////////////////////////////////////////////
@@ -23,7 +25,6 @@ void setup() {
     HomeNode.y = cy;
     HomeNode.size = centreRadius;
     HomeNode.influence = 200;
-    nodeList.push(center);
 }
 
 function circle(x,y,radius) {
@@ -81,7 +82,7 @@ void draw() {
     }
 
     // Draw all nodes proper
-    println(nodeList.length);
+    //println(nodeList.length);
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         fill(node.color);
@@ -112,6 +113,7 @@ void mouseClicked() {
                 var k = nodeList[j].inputNodes.indexOf(node);
                 if(k != -1) {
                     nodeList[j].inputNodes.splice(k, 1);
+                    nodeList[j].inputs.splice(k, 1);
                 }
             }
             println("kill");

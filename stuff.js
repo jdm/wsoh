@@ -1,3 +1,5 @@
+/* -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 var defaultInfluence = 50;
 
 var Circle = 0;
@@ -63,7 +65,9 @@ var freqIdx = 0;
 var freqs = [344.53, 465.1155, 1033.59, 689.06];
 function make_random_osc(x, y) {
   var harmonic = Math.floor(Math.random()*5) + 1;
-  return makeOsc(x, y, freqs[freqIdx++ % freqs.length], /*harmonic*/ 1);
+  var freq = freqs[freqIdx++ % freqs.length];
+  //return makeSineOsc(x, y, freq, /*harmonic*/ 1);
+  return makeSquareWave(x, y, freq);
 }
 
 var bpm = 120;
@@ -77,4 +81,14 @@ function addNode(n) {
 
 function removeNode(i) {
   nodeList.splice(i, 1);
+  
+  for (var j = 0; j < nodeList.length; j++) {
+    var n = nodeList[j];
+    var idx = n.inputNodes.indexOf(node);
+    if (idx != -1) {
+      n.inputNodes.splice(idx, 1);
+      n.inputs.splice(idx, 1);
+      break;
+    }
+  }
 }
