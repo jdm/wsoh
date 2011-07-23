@@ -161,6 +161,10 @@ function Node(x, y, shape, modifySignal, opts) {
     this.hasInConnection = function() {
         return this.inputNodes.length != 0;
     };
+  
+    this.update = function(args) {
+        //do nothing by default
+    };
 }
 
 Node.prototype = {

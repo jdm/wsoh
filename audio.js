@@ -58,7 +58,17 @@ function generateAudio() {
 
 function makeSimpleOsc(x, y, type, freq, harmonic) {
   var osc = new Node(x, y, Square, function() {return this.signal;}, {acceptInput: false});
-  osc.dsp = new Oscillator(type, freq*harmonic, 1/harmonic, bufSize, sampleRate);
+  osc.harmonic = harmonic;
+  osc.freq = freq*harmonic;
+  osc.amp = 1/harmonic;
+  osc.dsp = new Oscillator(type, osc.freq, osc.harmonic, bufSize, sampleRate);
+  osc.update = function(args) {
+    var amp = args.amplitude || osc.amp;
+    var freq = args.frequency || osc.freq;
+    osc.dsp = new Oscillator(type, freq, amp, bufSize, sampleRate);
+    osc.amp = amp;
+    osc.freq = freq;
+  };
   osc.signal = osc.dsp.generate();
   return osc;
 }
