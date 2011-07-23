@@ -92,11 +92,12 @@ function reconnectNode(intersecting, newNode) {
                                         return elem.hasOutConnection();
                                       });
     if (interesting.length > 0 && !newNode.hasInConnection() &&
-        !newNode.connectedTo(interesting[0])) {
+        !newNode.connectedTo(interesting[0]) && newNode.acceptInput) {
         interesting[0].connectOutputTo(newNode);
     }
   
-    if (!newNode.hasInConnection() && newNode.acceptInput && nonaccepting.length > 0) {
+    if (!newNode.hasInConnection() && newNode.acceptInput && nonaccepting.length > 0 &&
+        !newNode.connectedTo(nonaccepting[0])) {
         nonaccepting[0].connectOutputTo(newNode);
     }
     if (accepting.length > 0 && !newNode.connectedTo(accepting[0]) && !newNode.hasOutConnection()) {
@@ -135,11 +136,14 @@ function Node(x, y, shape, modifySignal, opts) {
     this.generateSignal = generateSignal;
 
     this.connectOutputTo = function(node) {
-        console.log(this.outputNode);
+        console.log(node ? node.id : null);
+        console.log(this.outputNode ? this.outputNode.id : null);
+        console.log(this.id);
         this.disconnectFrom(this.outputNode);
         this.outputNode = node;
         if (!node.acceptMultipleInputs) {
             for (var i = 0; i < node.inputNodes.length; i++) {
+                node.inputNodes[i].disconnectFrom(node);
                 node.inputNodes[i].outputNode = this;
             }
             node.inputNodes = [this];
