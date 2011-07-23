@@ -82,14 +82,4 @@ function addNode(n) {
 function removeNode(i) {
   var node = nodeList[i];
   nodeList.splice(i, 1);
-  
-  for (var j = 0; j < nodeList.length; j++) {
-    var n = nodeList[j];
-    var idx = n.inputNodes.indexOf(node);
-    if (idx != -1) {
-      n.inputNodes.splice(idx, 1);
-      n.inputs.splice(idx, 1);
-      break;
-    }
-  }
 }
