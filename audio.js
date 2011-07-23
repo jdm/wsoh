@@ -4,6 +4,9 @@ var bufSize = /*1024*/8192;
 var sampleRate = 44100;
 var bufferTime = Math.floor(1000 / (sampleRate / bufSize));
 
+var sequencerStep = 0; // Sequencer step postion      
+var sequencerTicksPerMillisecond = bpm * 8 / 60000; // Sequencer Ticks each millisecond. A Tick is a partial step.
+
 var output = new Audio();
 
 if ( typeof output.mozSetup === 'function' ) {
@@ -40,10 +43,15 @@ nodeList.push(HomeNode);
 
 /////////////
 
+var timeStamp = (new Date()).getTime();
+
 function generateAudio() {
   //console.log("---");
+  var currentTime = (new Date()).getTime();
   var homeNode = nodeList[0];
   audioWriter(homeNode.generateSignal.call(homeNode));
+  sequencerStep += (currentTime - timeStamp) * sequencerTicksPerMillisecond;
+  timeStamp = (new Date()).getTime();
 }
 
 ///////////
@@ -60,15 +68,15 @@ function makeSineOsc(x, y, freq, harmonic) {
 }
 
 function makeSawOsc(x, y, freq, harmonic) {
-  return makeSimplOsc(x, y, DSP.SAW, freq, harmonic);
+  return makeSimpleOsc(x, y, DSP.SAW, freq, harmonic);
 }
 
 function makeSquareOsc(x, y, freq, harmonic) {
-  return makeSimplOsc(x, y, DSP.SQUARE, freq, harmonic);
+  return makeSimpleOsc(x, y, DSP.SQUARE, freq, harmonic);
 }
 
 function makeTriangleOsc(x, y, freq, harmonic) {
-  return makeSimplOsc(x, y, DSP.TRIANGLE, freq, harmonic);
+  return makeSimpleOsc(x, y, DSP.TRIANGLE, freq, harmonic);
 }
 
 ///////////
@@ -88,8 +96,9 @@ function makeSquareWave(x, y, freq) {
 //////////
 
 function gateSignal() {
-  if (this.inputs[0] && Math.floor(Math.random() * 100) > this.percent)
+  if (this.inputs[0] && Math.floor(Math.random() * 100) > this.percent) {
     return this.inputs[0];
+  }
   return silence;
 }
 
@@ -98,3 +107,7 @@ function makeGate(x, y, percent) {
   n.percent = percent;
   return n;
 }
+
+///////////
+
+setInterval(generateAudio, bufferTime);

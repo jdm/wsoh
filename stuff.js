@@ -39,7 +39,9 @@ function generateSignal() {
     //console.log("subgen " + node.id);
     this.inputs[i] = node.generateSignal.call(node);
   }
-  return this.modifySignal.call(this);
+  var sig = this.modifySignal.call(this);
+  this.playing = sig === silence;
+  return sig;
 }
 
 var lastId = 0;
@@ -93,6 +95,7 @@ function Node(x, y, shape, modifySignal, opts) {
     this.id = lastId++;
     this.x = x;
     this.y = y;
+    this.playing = false;
     this.size = opts.size ?  opts.size : 10;
     this.shape = shape;
     this.pointInShape = collideFunc[shape];
@@ -162,8 +165,8 @@ var freqs = [344.53, 465.1155, 1033.59, 689.06];
 function make_random_osc(x, y) {
   var harmonic = Math.floor(Math.random()*5) + 1;
   var freq = freqs[freqIdx++ % freqs.length];
-  //return makeSineOsc(x, y, freq, /*harmonic*/ 1);
-  return makeSquareWave(x, y, freq);
+  return makeTriangleOsc(x, y, freq, /*harmonic*/ 1);
+  //return makeSquareWave(x, y, freq);
 }
 
 var bpm = 120;

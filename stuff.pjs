@@ -210,7 +210,7 @@ void draw() {
         var node = nodeList[i];
         stroke(0);
         fill(0);
-        int base = 1.5;
+        int base = 1.5 + 5.0 * node.playing;
         for(int j=0; j < node.inputNodes.length; j++) {
             // input into this node
             var parent = node.inputNodes[j];
@@ -244,8 +244,6 @@ void draw() {
     displayUI(editUI);
     displayUI(volumeUI);
     displayUI(frequencyUI);
-
-    generateAudio();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
