@@ -18,21 +18,39 @@ function pointInSquare(x, y) {
          y > this.y - this.size && y < this.y + this.size;
 }
 
-function pointInCircle() {
-  return false; //TODO
+function dist(x1,y1, x2,y2) {
+    return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+}
+
+function pointInCircle(x, y) {
+    return dist(x,y, this.x,this.y)<this.size;
+}
+
+// right now only bounding circles, because multiple shapes are dumb
+// useful for figuring out influences
+function intersectCircles(node) {
+    return dist(this.x,this.y,node.x,node.y)<(node.influence+this.influence);
 }
 
 var collideFunc = [pointInCircle, pointInSquare];
 
-function Node(x, y, shape, modifySignal) {
-  this.x = x;
-  this.y = y;
-  this.size = 10;
-  this.shape = shape;
-  this.pointInShape = collideFunc[shape];
-  this.colour = 255;
-  this.modifySignal = modifySignal;
-  this.influence = defaultInfluence;
+function Node(x, y, shape, modifySignal, opts) {
+    if(opts == undefined) {
+        opts = {};
+    }
+    this.x = x;
+    this.y = y;
+    this.size = opts.size ?  opts.size : 10;
+    this.shape = shape;
+    this.pointInShape = collideFunc[shape];
+    this.colour = 255;
+    this.modifySignal = modifySignal;
+    this.influence = opts.influence ? opts.influence : defaultInfluence;
+    // bool
+    this.mouseOver = false;
+    // intersect fn
+    this.intersect = opts.intersect ? opts.intersect : intersectCircles;
+    this.inputNodes = [];
 }
 
 Node.prototype = {

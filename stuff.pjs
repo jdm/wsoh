@@ -1,55 +1,121 @@
+////////////////////////////////////////////////////////////////////////////////
+// stuff.pjs
+////////////////////////////////////////////////////////////////////////////////
+
+// constants
 int centreRadius = 25;
-int rate = 1;
+int rate = 1; // at 1r/s b/c not needed faster
 
-void setup() {
-  size(screen.width, screen.height);
-  frameRate(rate);
-  //noLoop();
-}
-
+// current beats per minute, doesn't allow for multiple bpms
 int curbpm = 0;
+// universal tick count
 int ticks = 0;
 
-void draw() {
-  background(125);
-  fill(255);
+// required by processing.js
+void setup() {
+    size(screen.width, screen.height);
+    frameRate(rate);
+    //noLoop();
 
-  int x = width / 2 - centreRadius;
-  int y = height / 2 - centreRadius;
-  ellipse(x, y, centreRadius * 2, centreRadius * 2);
-  
-  if (curbpm != bpm) {
-    curbpm = bpm;
-    ticks = curbpm / 60;
-  }
-
-  // Draw all nodes
-  println(nodeList.length);
-  for (int i = 0; i < nodeList.length; i++) {
-    var node = nodeList[i];
-    fill(node.colour);
-    switch (node.shape) {
-      case Circle:
-        ellipse(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
-        break;
-      case Square:
-        rect(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
-        break;
-    }
-  }
+    // plops down the center
+    int cx = width / 2 - centreRadius;
+    int cy = height / 2 - centreRadius;
+    var center = new Node(cx, cy, Circle, function(){}, {size:centreRadius, influence:200});
+    nodeList.push(center);
 }
 
-void mouseClicked()
-{
-  for (int i = 0; i < nodeList.length; i++) {
-    var node = nodeList[i];
-    if (node.pointInShape.call(node, mouseX, mouseY)) {
-      println("intersect");
-      nodeList.splice(i, 1);
-      return;
+function circle(x,y,radius) {
+    ellipse(x,y,2*radius,2*radius);
+}
+
+// required by processing.js
+void draw() {
+    // drawing background
+    background(125);
+    fill(255);
+
+    if (curbpm != bpm) {
+        curbpm = bpm;
+        ticks = curbpm / 60;
     }
-  }
-  int x = mouseX;
-  int y = mouseY;
-  nodeList.push(make_random_osc(x, y));
+
+    //// Draw Layers
+    // Draw the influence circles
+    for (int i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+
+        if(node.mouseOver) {
+            println("show influence circle");
+            // display an influence circle
+            fill(color(255, 255, 255, 128));
+            circle(node.x, node.y, node.influence);
+        }
+    }
+
+    // Draw relationships
+    for (int i=0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        stroke(0);
+        for(int j=0; j < node.inputNodes.length; j++) {
+            var child = node.inputNodes[j];
+            // replace with a triangle, to show direction
+            line(node.x,node.y, child.x,child.y);
+        }
+    }
+
+    // Draw all nodes proper
+    println(nodeList.length);
+    for (int i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        fill(node.color);
+
+        switch (node.shape) {
+        case Circle:
+            circle(node.x, node.y, node.size);
+            // ellipse(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
+            break;
+        case Square:
+            rect(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
+            break;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Mouse events
+
+void mouseClicked() {
+    // check if the click falls into an object
+    for (int i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        if (node.pointInShape.call(node, mouseX, mouseY)) {
+            println("intersect");
+            nodeList.splice(i, 1);
+            return;
+        }
+    }
+    // otherwise, we're placing an object
+    int x = mouseX;
+    int y = mouseY;
+    var newNode = make_random_osc(x, y);
+    // add us as children if inside influence
+    for (int i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        if (node.intersect.call(node, newNode)) {
+            println("node in influence");
+            node.inputNodes.push(newNode);
+        }
+    }
+    nodeList.push(newNode);
+}
+
+void mouseMoved() {
+    for (int i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        if (node.pointInShape.call(node, mouseX, mouseY)) {
+            node.mouseOver = true;
+        } else {
+            node.mouseOver = false;
+        }
+    } 
 }
