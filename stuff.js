@@ -80,12 +80,26 @@ function reconnectNode(intersecting, newNode) {
                                              return !elem.acceptInput;
                                            });
   
-    if (newNode.acceptInput) {
-        if (nonaccepting.length && newNode.acceptInput) {
-            nonaccepting[0].connectOutputTo(newNode);
-        }
+    var interesting = accepting.filter(function(elem) {
+                                         return !elem.hasInConnection();
+                                       });
+    if (interesting.length > 0 && !newNode.hasOutConnection() &&
+        !newNode.connectedTo(interesting[0])) {
+      newNode.connectOutputTo(interesting[0]);
     }
-    if (accepting.length && !newNode.connectedTo(accepting[0])) {
+    
+    interesting = intersecting.filter(function(elem) {
+                                        return elem.hasOutConnection();
+                                      });
+    if (interesting.length > 0 && !newNode.hasInConnection() &&
+        !newNode.connectedTo(interesting[0])) {
+        interesting[0].connectOutputTo(newNode);
+    }
+  
+    if (!newNode.hasInConnection() && newNode.acceptInput && nonaccepting.length > 0) {
+        nonaccepting[0].connectOutputTo(newNode);
+    }
+    if (accepting.length > 0 && !newNode.connectedTo(accepting[0]) && !newNode.hasOutConnection()) {
         newNode.connectOutputTo(accepting[0]);
     }  
 }
@@ -121,6 +135,7 @@ function Node(x, y, shape, modifySignal, opts) {
     this.generateSignal = generateSignal;
 
     this.connectOutputTo = function(node) {
+        console.log(this.outputNode);
         this.disconnectFrom(this.outputNode);
         this.outputNode = node;
         if (!node.acceptMultipleInputs) {
