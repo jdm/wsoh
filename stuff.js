@@ -15,6 +15,10 @@ function dist(x1,y1, x2,y2) {
     return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
 }
 
+function nodedist(n1, n2) {
+    return dist(n1.x, n1.y, n2.x, n2.y);
+}
+
 function pointInCircle(x, y) {
     return dist(x,y, this.x,this.y)<this.size;
 }
@@ -22,23 +26,71 @@ function pointInCircle(x, y) {
 // right now only bounding circles, because multiple shapes are dumb
 // useful for figuring out influences
 function intersectCircles(node) {
-    return dist(this.x,this.y,node.x,node.y)<(this.influence+node.size);
+    var d = dist(this.x,this.y,node.x,node.y);
+    return d< (this.influence+node.size) || d < (node.influence+this.size);
 }
 
 var collideFunc = [pointInCircle, pointInSquare];
 
 function generateSignal() {
+  //console.log("gen " + this.id + " " + this.inputNodes.length); 
   for (var i = 0; i < this.inputNodes.length; i++) {
     var node = this.inputNodes[i];
+    //console.log("subgen " + node.id);
     this.inputs[i] = node.generateSignal.call(node);
   }
   return this.modifySignal.call(this);
+}
+
+var lastId = 0;
+
+function generateIntersections(newNode) {
+    var intersecting = [];
+    for (var i = 0; i < nodeList.length; i++) {
+        var node = nodeList[i];
+        if (node.id == newNode.id)
+          continue;
+        if (node.intersect.call(node, newNode)) {
+            intersecting.push(node);
+        }
+    }
+    return intersecting;
+}
+
+function reconnectNode(intersecting, newNode) {
+    if (intersecting.length == 0)
+      return;
+  
+    intersecting = intersecting.sort(function(a, b) {
+                                      var d1 = nodedist(a, newNode);
+                                      var d2 = nodedist(b, newNode);
+                                      if (d1 < d2) return -1;
+                                      if (d1 == d2) return 0;
+                                      return 1;
+                                     });
+  
+    var accepting = intersecting.filter(function(elem) {
+                                          return elem.acceptInput;
+                                        });
+    var nonaccepting = intersecting.filter(function(elem) {
+                                             return !elem.acceptInput;
+                                           });
+  
+    if (newNode.acceptInput) {
+        if (nonaccepting.length && newNode.acceptInput) {
+            nonaccepting[0].connectOutputTo(newNode);
+        }
+    }
+    if (accepting.length && !newNode.connectedTo(accepting[0])) {
+        newNode.connectOutputTo(accepting[0]);
+    }  
 }
 
 function Node(x, y, shape, modifySignal, opts) {
     if(opts == undefined) {
         opts = {};
     }
+    this.id = lastId++;
     this.x = x;
     this.y = y;
     this.size = opts.size ?  opts.size : 10;
@@ -51,11 +103,55 @@ function Node(x, y, shape, modifySignal, opts) {
     this.mouseOver = false;
     // intersect fn
     this.intersect = opts.intersect ? opts.intersect : intersectCircles;
+    // bool
+    this.acceptInput = opts.acceptInput !== undefined ? opts.acceptInput : true;
+    // bool
+    this.acceptMultipleInputs = opts.acceptMultipleInputs !== undefined ? opts.acceptMultipleInputs : false;
     // input signals
     this.inputs = [];
     // input nodes
     this.inputNodes = [];
+    // output node
+    this.outputNode = null;
     this.generateSignal = generateSignal;
+
+    this.connectOutputTo = function(node) {
+        this.outputNode = node;
+        if (!node.acceptMultipleInputs) {
+            for (var i = 0; i < node.inputNodes.length; i++) {
+                node.inputNodes[i].outputNode = this;
+            }
+            node.inputNodes = [this];
+        } else {
+            node.inputNodes.push(this);
+        }
+    };
+    this.disconnect = function() {
+        if (this.outputNode) {
+            var idx = this.outputNode.inputNodes.indexOf(this);
+            this.outputNode.inputNodes.splice(idx, 1);
+            this.outputNode.inputs.splice(idx, 1);
+        }
+        for (var i = 0; i < this.inputNodes.length; i++) {
+            this.inputNodes[i].outputNode = null;
+        }
+        var output = this.outputNode;
+        this.outputNode = null;
+        if (output) {          
+            var intersecting = generateIntersections(output);
+            reconnectNode(intersecting, output);
+        }
+    };
+    this.connectedTo = function(node) {
+        return (this.inputNodes.indexOf(node) != -1 && node.outputNode == this) ||
+               (this.outputNode == node && node.inputNodes.indexOf(this) != -1);
+    };
+    this.hasOutConnection = function() {
+        return this.outputNode != null && this.id != nodeList[0].id;
+    };
+    this.hasInConnection = function() {
+        return this.inputNodes.length != 0;
+    };
 }
 
 Node.prototype = {

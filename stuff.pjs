@@ -107,15 +107,8 @@ void mouseClicked() {
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
-            // remove node, and all inputs
-            for (int j = 0; j < nodeList.length; j++) {
-                var k = nodeList[j].inputNodes.indexOf(node);
-                if(k != -1) {
-                    nodeList[j].inputNodes.splice(k, 1);
-                    nodeList[j].inputs.splice(k, 1);
-                }
-            }
             removeNode(i);
+            node.disconnect.call(node);
             return;
         }
     }
@@ -123,16 +116,21 @@ void mouseClicked() {
     int x = mouseX;
     int y = mouseY;
     // don't insert yet
-    var newNode = make_random_osc(x, y);
+    var newNode;
+    if (mouseButton == LEFT)
+        newNode = make_random_osc(x, y);
+    else
+        newNode = makeGate(x, y, 50);
+
     // add us as children if inside influence
-    for (int i = 0; i < nodeList.length; i++) {
-        var node = nodeList[i];
-        if (node.intersect.call(node, newNode)) {
-            // newNode will take node as an influence
-            node.inputNodes.push(newNode);
-        }
-    }
+    intersecting = generateIntersections(newNode);
+
     addNode(newNode);
+    if (intersecting.length == 0) {
+      return;
+    }
+
+    reconnectNode(intersecting, newNode);
 }
 
 void mouseMoved() {
