@@ -277,7 +277,6 @@ void draw() {
         var node = nodeList[i];
         stroke(0);
         fill(0);
-        int base = 1.5 + 5.0 * node.playing;
         for(int j=0; j < node.inputNodes.length; j++) {
             // input into this node
             var parent = node.inputNodes[j];
@@ -285,6 +284,7 @@ void draw() {
             int dx = parent.x - node.x;
             int dy = parent.y - node.y;
             int norm = dist(0,0, dx,dy);
+            int base = 1.5 + 5.0 * parent.playing;
             triangle(parent.x + base*dy/norm, parent.y - base*dx/norm,
                      parent.x - base*dy/norm, parent.y + base*dx/norm,
                      node.x, node.y);
@@ -365,7 +365,7 @@ void mouseClicked() {
     if(pointOnUI(editUI, x,y)) {
         return;
     } else if (pointOnUI(frequencyUI, x, y)) {
-        underScrutiny.update.call(underScrutiny, {volume: volumeUI.value});
+        underScrutiny.update.call(underScrutiny, {frequency: frequencyUI.value});
         return;
     } else if (pointOnUI(volumeUI, x, y)) {
         underScrutiny.update.call(underScrutiny, {amplitude: volumeUI.value});
@@ -435,10 +435,14 @@ void mouseDragged() {
             reconnectNode(intersecting, node);
         }
     }
-    if(volumeUI.click)
+    if(volumeUI.click) {
         pointOnUI(volumeUI, x,y);
-    if(frequencyUI.click)
+        underScrutiny.update.call(underScrutiny, {amplitude: volumeUI.value});
+    }
+    if(frequencyUI.click) {
         pointOnUI(frequencyUI, x,y);
+        underScrutiny.update.call(underScrutiny, {frequency: frequencyUI.value});
+    }
 }
 
 void mouseReleased() {
