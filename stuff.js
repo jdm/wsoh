@@ -1,12 +1,3 @@
-var bufSize = 8192;
-var sampleRate = 44100.0;
-
-var output = new Audio();
-
-var audioWriter = function(s) {
-  output.mozWriteAudio(s);
-}
-
 var defaultInfluence = 50;
 
 var Circle = 0;
@@ -34,6 +25,14 @@ function intersectCircles(node) {
 
 var collideFunc = [pointInCircle, pointInSquare];
 
+function generateSignal() {
+  for (var i = 0; i < this.inputNodes.length; i++) {
+    var node = this.inputNodes[i];
+    this.inputs[i] = node.generateSignal.call(node);
+  }
+  return this.modifySignal.call(this);
+}
+
 function Node(x, y, shape, modifySignal, opts) {
     if(opts == undefined) {
         opts = {};
@@ -51,26 +50,33 @@ function Node(x, y, shape, modifySignal, opts) {
     // intersect fn
     this.intersect = opts.intersect ? opts.intersect : intersectCircles;
     this.inputNodes = [];
+    this.inputs = [];
+    this.generateSignal = generateSignal;
 }
 
 Node.prototype = {
 };
 
-function make_osc(x, y, freq, harmonic) {
-  var osc = new Node(x, y, Square, null);
-  osc.dsp = new Oscillator(Oscillator.sine, freq*harmonic, 1/harmonic, bufSize, sampleRate);
-  return osc;
-}
-
+var freqIdx = 0;
+var freqs = [344.53, 465.1155, 1033.59, 689.06];
 function make_random_osc(x, y) {
-  var harmonic = Math.floor(Math.random()*40);
-  return make_osc(x, y, 344.53, harmonic);
+  var harmonic = Math.floor(Math.random()*5) + 1;
+  return makeOsc(x, y, freqs[freqIdx++ % freqs.length], /*harmonic*/ 1);
 }
 
 var bpm = 120;
 
-var home = {
-};
-//var osc = make_osc(344.53);
-
 var nodeList = [];
+
+function addNode(n) {
+  nodeList.push(n);
+  nodeList[0].inputNodes.push(n);
+    return n;
+}
+
+function removeNode(i) {
+  var node = nodeList[i];
+  nodeList.splice(i, 1);
+  var inputNodes = nodeList[0].inputNodes;
+  inputNodes.splice(inputNodes.indexOf(node), 1);
+}

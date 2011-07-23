@@ -4,7 +4,7 @@
 
 // constants
 int centreRadius = 25;
-int rate = 1; // at 1r/s b/c not needed faster
+int rate = 10; // lower rate
 
 // current beats per minute, doesn't allow for multiple bpms
 int curbpm = 0;
@@ -15,12 +15,15 @@ int ticks = 0;
 void setup() {
     size(screen.width, screen.height);
     frameRate(rate);
-    //noLoop();
 
     // plops down the center
     int cx = width / 2 - centreRadius;
     int cy = height / 2 - centreRadius;
-    var center = new Node(cx, cy, Circle, function(){}, {size:centreRadius, influence:200});
+    HomeNode.x = cx;
+    HomeNode.y = cy;
+    HomeNode.size = centreRadius;
+    HomeNode.influence = 200;
+    // var center = new Node(cx, cy, Circle, function(){}, {size:centreRadius, influence:200});
     nodeList.push(center);
 }
 
@@ -79,6 +82,7 @@ void draw() {
             break;
         }
     }
+    generateAudio();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,14 +94,14 @@ void mouseClicked() {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
             println("intersect");
-            nodeList.splice(i, 1);
+            removeNode(i);
             return;
         }
     }
     // otherwise, we're placing an object
     int x = mouseX;
     int y = mouseY;
-    var newNode = make_random_osc(x, y);
+    var newNode = addNode(make_random_osc(x, y));
     // add us as children if inside influence
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
