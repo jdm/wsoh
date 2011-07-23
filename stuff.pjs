@@ -58,7 +58,9 @@ function displayUI(ui) {
             var angle = (bAngle+eAngle)/2;
             var tx = Math.cos(angle+ui.angleOffset)*(ui.r);
             var ty = Math.sin(angle+ui.angleOffset)*(ui.r);
-            ui.sections[i].draw(tx+ui.x,ty+ui.y);
+            if(ui.sections[i].draw) {
+                ui.sections[i].draw(tx+ui.x,ty+ui.y);
+            }
 
             strokeWeight(ui.margin);
             stroke(backgroundColor);
@@ -173,44 +175,40 @@ void drawTri(x,y) {
 void drawGate(x,y) {
     stroke(0);
     strokeWeight(2);
-    var xscale = 12;
-    var yscale = 8;
-    line(x-xscale,y, x-xscale/2,y-yscale);
-    line(x-xscale/2,y-yscale, x,y);
-    line(x+xscale/2,y+yscale, x,y);
-    line(x+xscale,y, x+xscale/2,y+yscale);
+    line(x-20,y,x-10,y);
+    line(x-10,y-10,x-10,y+10);
+    line(x-5,y-10,x-5,y+10);
+    line(x-5,y-10,x+5,y-10);
+    line(x+5,y-10,x+5,y-15);
+    line(x-5,y+10,x+5,y+10);
+    line(x+5,y+10,x+5,y+15);
 }
 
-void makeSine(ui) {
-}
-void makeSquare(ui) {
-}
-void makeSaw(ui) {
-}
-void makeTri(ui) {
-}
-void makeGate(ui) {
+void drawClose(x,y) {
+    stroke(0);
+    strokeWeight(8);
+    var size = 14;
+    line(x+size,y+size, x-size,y-size);
+    line(x+size,y-size, x-size,y+size);
 }
 
-
-// menu for 
+// Menus
 var addUI = {x:0, y:0, r:40,
              thickness:50,
              display:false,
              margin:10, angleOffset:-PI/2,
-             sections:[{weight:1, callback:makeSine, draw:drawSine},
-                       {weight:1, callback:makeSquare, draw:drawSquare},
-                       {weight:1, callback:makeSaw, draw:drawSaw},
-                       {weight:1, callback:makeTri, draw:drawTri},
-                       {weight:1, callback:makeGate, draw:drawGate},
+             sections:[{weight:1, draw:drawSine},
+                       {weight:1, draw:drawSquare},
+                       {weight:1, draw:drawSaw},
+                       {weight:1, draw:drawTri},
+                       {weight:1, draw:drawGate},
                       ]};
 
 var editUI = {x:0, y:0, r:30,
              thickness:50,
              display:false,
              margin:10, angleOffset:-PI/2,
-             sections:[{weight:1},
-                       {weight:1},
+              sections:[{weight:1, draw:drawClose},
                       ]};
 
 var volumeUI = {x:0, y:0, r:80,
@@ -386,10 +384,25 @@ void mouseClicked() {
         if(pointOnUI(addUI, x,y)) {
             // if it's on the UI, pass on
 
-            if (mouseButton == LEFT)
-                newNode = make_random_osc(x, y);
-            else
-                newNode = makeGate(x, y, 50);
+            if (mouseButton == LEFT) {
+                //newNode = make_random_osc(x, y);
+                switch(addUI.focus) {
+                case 0:
+                    newNode = makeSineOsc(x,y, 440, 2);
+                    break;
+                case 1:
+                    newNode = makeSquareOsc(x,y, 440, 2);
+                    break;
+                case 2:
+                    newNode = makeSawOsc(x,y, 440, 2);
+                    break;
+                case 3:
+                    newNode = makeTriangleOsc(x,y, 440, 2);
+                    break;
+                case 4:
+                    newNode = makeGate(x, y, 50);
+                }
+            }
 
             // add us as children if inside influence
             intersecting = generateIntersections(newNode);
