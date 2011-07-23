@@ -23,7 +23,6 @@ void setup() {
     HomeNode.y = cy;
     HomeNode.size = centreRadius;
     HomeNode.influence = 200;
-    // var center = new Node(cx, cy, Circle, function(){}, {size:centreRadius, influence:200});
     nodeList.push(center);
 }
 
@@ -49,20 +48,35 @@ void draw() {
 
         if(node.mouseOver) {
             println("show influence circle");
-            // display an influence circle
-            fill(color(255, 255, 255, 128));
+            // display an influence circle, opacity
+            fill(color(255, 255, 255, 50));
+            stroke(color(0,0,0,100));
+            circle(node.x, node.y, node.influence);
+        } else {
+            fill(color(255, 255, 255, 20));
+            stroke(color(0,0,0,20));
             circle(node.x, node.y, node.influence);
         }
     }
+    // reset the stroke
+    stroke(color(0,0,0,255));
 
     // Draw relationships
     for (int i=0; i < nodeList.length; i++) {
         var node = nodeList[i];
         stroke(0);
+        fill(0);
+        int base = 1.5;
         for(int j=0; j < node.inputNodes.length; j++) {
-            var child = node.inputNodes[j];
+            // input into this node
+            var parent = node.inputNodes[j];
             // replace with a triangle, to show direction
-            line(node.x,node.y, child.x,child.y);
+            int dx = parent.x - node.x;
+            int dy = parent.y - node.y;
+            int norm = dist(0,0, dx,dy);
+            triangle(parent.x + base*dy/norm, parent.y + base*dx/norm,
+                     parent.x - base*dy/norm, parent.y - base*dx/norm,
+                     node.x, node.y);
         }
     }
 
@@ -75,7 +89,6 @@ void draw() {
         switch (node.shape) {
         case Circle:
             circle(node.x, node.y, node.size);
-            // ellipse(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
             break;
         case Square:
             rect(node.x - node.size, node.y - node.size, node.size * 2, node.size * 2);
@@ -93,7 +106,13 @@ void mouseClicked() {
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
-            println("intersect");
+            // remove node, and all inputs
+            for (int j = 0; i < nodeList.length; i++) {
+                var k = nodeList[j].inputNode.indexOf(node);
+                if(k != -1) {
+                    nodeList[j].inputNode.splice(k, 1);
+                }
+            }
             removeNode(i);
             return;
         }
@@ -101,12 +120,13 @@ void mouseClicked() {
     // otherwise, we're placing an object
     int x = mouseX;
     int y = mouseY;
+    // don't insert yet
     var newNode = make_random_osc(x, y);
     // add us as children if inside influence
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.intersect.call(node, newNode)) {
-            println("node in influence");
+            // newNode will take node as an influence
             node.inputNodes.push(newNode);
         }
     }
