@@ -51,9 +51,9 @@ function Node(x, y, shape, modifySignal, opts) {
     this.mouseOver = false;
     // intersect fn
     this.intersect = opts.intersect ? opts.intersect : intersectCircles;
-    // parent nodes that feed into this one
+    // input signals
     this.inputs = [];
-    // children nodes that get fed to
+    // input nodes
     this.inputNodes = [];
     this.generateSignal = generateSignal;
 }
