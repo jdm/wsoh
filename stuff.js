@@ -184,6 +184,9 @@ function Node(x, y, shape, modifySignal, opts) {
     this.update = function(args) {
         //do nothing by default
     };
+    this.serialize = function() {
+        return {amp:this.amp};
+    };
 }
 
 Node.prototype = {
