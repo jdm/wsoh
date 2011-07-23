@@ -390,6 +390,13 @@ void mouseClicked() {
             volumeUI.node = node;
             frequencyUI.node = node;
 
+            if(node.amp != undefined) {
+                volumeUI.value = node.amp;
+            }
+            if(node.freq != undefined) {
+                frequencyUI.value = node.freq;
+            }
+
             underScrutiny = node;
             return;
         }
