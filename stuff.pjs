@@ -108,10 +108,10 @@ void mouseClicked() {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
             // remove node, and all inputs
-            for (int j = 0; i < nodeList.length; i++) {
-                var k = nodeList[j].inputNode.indexOf(node);
+            for (int j = 0; j < nodeList.length; j++) {
+                var k = nodeList[j].inputNodes.indexOf(node);
                 if(k != -1) {
-                    nodeList[j].inputNode.splice(k, 1);
+                    nodeList[j].inputNodes.splice(k, 1);
                     nodeList[j].inputs.splice(k, 1);
                 }
             }
