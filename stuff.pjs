@@ -130,12 +130,14 @@ function changeUIState(ui, x,y) {
         ui.value = angle/(2*PI)*(ui.range[1]-ui.range[0])+ui.range[0];
         if(ui.snap){
             var minDiff = ui.snap[0];
+            var j = 0;
             for(var i in ui.snap) {
-                if(Math.abs(ui.value-ui.snap[i])<minDiff) {
-                    minDiff = ui.snap[i];
+                if(Math.abs(ui.value-ui.snap[i]) < minDiff) {
+                    minDiff = Math.abs(ui.value-ui.snap[i]);
+                    j = i;
                 }
             }
-            ui.value = minDiff;
+            ui.value = ui.snap[j];
         }
     }
 }
@@ -227,14 +229,22 @@ var volumeUI = {x:0, y:0, r:80,
                 thickness:20,
                 display:false,
                 margin:10, angleOffset:-PI/2,
-                value:100, range:[0,100]};
+                value:0.1, range:[0,1.0]};
 
 var frequencyUI = {x:0, y:0, r:120,
                    thickness:20,
                    display:false,
                    margin:10, angleOffset:-PI/2,
-                   value:35, range:[0,1000],
-                   snap:[220, 440, 880]};
+                   value:440, range:[0,1000],
+                   snap:[ 16.35,    17.32,    18.35,    19.45,    20.6,     21.83,    23.12,    24.5,     25.96,    27.5,  29.14,    30.87,
+                          /* 1 */   32.7,     34.65,    36.71,    38.89,    41.2,     43.65,    46.25,    49,       51.91,    55,    58.27,    61.74,
+                          /* 2 */   65.41,    69.3,     73.42,    77.78,    82.41,    87.31,    92.5,     98,       103.83,   110,   116.54,   123.47,
+                          /* 3 */   130.81,   138.59,   146.83,   155.56,   164.81,   174.61,   185,      196,      207.65,   220,   233.08,   246.94,
+                          /* 4 */   261.63,   277.18,   293.66,   311.13,   329.63,   349.23,   369.99,   392,      415.3,    440,   466.16,   493.88,
+                          /* 5 */   523.25,   554.37,   587.33,   622.25,   659.26,   698.46,   739.99,   783.99,   830.61,   880,   932.33,   987.77,
+                          /* 6 */   1046.5,   1108.73,  1174.66,  1244.51,  1318.51,  1396.91,  1479.98,  1567.98,  1661.22,  1760,  1864.66,  1975.53,
+                          /* 7 */   2093,     2217.46,  2349.32,  2489.02,  2637.02,  2793.83,  2959.96,  3135.96,  3322.44,  3520,  3729.31,  3951.07,
+                          /* 8 */   4186.01,  4434.92,  4698.64,  4978 ]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // required by processing.js
@@ -291,7 +301,6 @@ void draw() {
         var node = nodeList[i];
         stroke(0);
         fill(0);
-        int base = 1.5 + 5.0 * node.playing;
         for(int j=0; j < node.inputNodes.length; j++) {
             // input into this node
             var parent = node.inputNodes[j];
@@ -299,6 +308,7 @@ void draw() {
             int dx = parent.x - node.x;
             int dy = parent.y - node.y;
             int norm = dist(0,0, dx,dy);
+            int base = 1.5 + 5.0 * parent.playing;
             triangle(parent.x + base*dy/norm, parent.y - base*dx/norm,
                      parent.x - base*dy/norm, parent.y + base*dx/norm,
                      node.x, node.y);
@@ -353,6 +363,8 @@ void mousePressed() {
     }
 }
 
+var underScrutiny = null;
+
 void mouseClicked() {
     int x = mouseX;
     int y = mouseY;
@@ -377,6 +389,8 @@ void mouseClicked() {
             editUI.node = node;
             volumeUI.node = node;
             frequencyUI.node = node;
+
+            underScrutiny = node;
             return;
         }
     }
@@ -398,13 +412,18 @@ void mouseClicked() {
         }
     } else if(pointOnUI(volumeUI, x,y)) {
         changeUIState(volumeUI, x,y);
+        underScrutiny.update.call(underScrutiny, {amplitude: volumeUI.value});
+        return;
     } else if(pointOnUI(frequencyUI, x,y)) {
         changeUIState(frequencyUI, x,y);
+        underScrutiny.update.call(underScrutiny, {frequency: frequencyUI.value});
+        return;
     } else {
         if(editUI.display) { // proxy for whether edit mode
             editUI.display = false;
             volumeUI.display = false;
             frequencyUI.display = false;
+            underScrutiny = null;
             return; // don't lay down addUI
         }
     }
@@ -433,6 +452,7 @@ void mouseClicked() {
                 case 4:
                     newNode = makeGate(x, y, 50);
                 }
+                newNode.update.call(newNode, {amplitude: volumeUI.value});
             }
 
             // add us as children if inside influence
@@ -464,10 +484,15 @@ void mouseDragged() {
             reconnectNode(intersecting, node);
         }
     }
-    if(volumeUI.click)
-        changeUIState(volumeUI, x,y);
-    if(frequencyUI.click)
+
+    if(volumeUI.click) {
+        changeUIState(volumeUI, x,y); 
+        underScrutiny.update.call(underScrutiny, {amplitude: volumeUI.value});
+    }
+    if(frequencyUI.click) {
         changeUIState(frequencyUI, x,y);
+        underScrutiny.update.call(underScrutiny, {frequency: frequencyUI.value});
+    }
 }
 
 void mouseReleased() {

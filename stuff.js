@@ -40,7 +40,7 @@ function generateSignal() {
     this.inputs[i] = node.generateSignal.call(node);
   }
   var sig = this.modifySignal.call(this);
-  this.playing = sig === silence;
+  this.playing = sig !== silence;
   return sig;
 }
 
@@ -160,6 +160,10 @@ function Node(x, y, shape, modifySignal, opts) {
     };
     this.hasInConnection = function() {
         return this.inputNodes.length != 0;
+    };
+  
+    this.update = function(args) {
+        //do nothing by default
     };
 }
 
