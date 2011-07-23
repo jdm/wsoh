@@ -55,6 +55,10 @@ function displayUI(ui) {
                 stroke(255);
             arc(ui.x, ui.y, 2*ui.r, 2*ui.r,
                 bAngle+ui.angleOffset, eAngle+ui.angleOffset);
+            var angle = (bAngle+eAngle)/2;
+            var tx = Math.cos(angle+ui.angleOffset)*(ui.r);
+            var ty = Math.sin(angle+ui.angleOffset)*(ui.r);
+            ui.sections[i].draw(tx+ui.x,ty+ui.y);
 
             strokeWeight(ui.margin);
             stroke(backgroundColor);
@@ -123,17 +127,82 @@ function pointOnUI(ui, x,y) {
 }
 
 // supposed to be a UI logo element
-void drawSine() {
+void drawSine(x,y) {
+    stroke(0);
+    strokeWeight(2);
+    var xscale = 4;
+    var yscale = 8;
+    var incr = 0.1;
+    for(var i=-PI; i < PI; i+= incr) {
+        line(x+xscale*i,y+yscale*Math.sin(i),
+             x+xscale*(i+incr),y+yscale*Math.sin(i+incr));
+    }
 }
+void drawSquare(x,y) {
+    stroke(0);
+    strokeWeight(2);
+    var xscale = 12;
+    var yscale = 8;
+    line(x-xscale,y, x-xscale,y-yscale);
+    line(x-xscale,y-yscale, x,y-yscale);
+    line(x,y-yscale, x,y+yscale);
+    line(x,y+yscale, x+xscale,y+yscale);
+    line(x+xscale,y+yscale, x+xscale,y);
+}
+void drawSaw(x,y) {
+    stroke(0);
+    strokeWeight(2);
+    var xscale = 12;
+    var yscale = 8;
+    line(x-xscale,y-yscale, x-xscale,y+yscale);
+    line(x-xscale,y+yscale, x,y-yscale);
+    line(x,y-yscale, x,y+yscale);
+    line(x,y+yscale, x+xscale,y-yscale);
+    line(x+xscale,y-yscale, x+xscale,y+yscale);
+}
+void drawTri(x,y) {
+    stroke(0);
+    strokeWeight(2);
+    var xscale = 12;
+    var yscale = 8;
+    line(x-xscale,y, x-xscale/2,y-yscale);
+    line(x-xscale/2,y-yscale, x,y);
+    line(x+xscale/2,y+yscale, x,y);
+    line(x+xscale,y, x+xscale/2,y+yscale);
+}
+void drawGate(x,y) {
+    stroke(0);
+    strokeWeight(2);
+    var xscale = 12;
+    var yscale = 8;
+    line(x-xscale,y, x-xscale/2,y-yscale);
+    line(x-xscale/2,y-yscale, x,y);
+    line(x+xscale/2,y+yscale, x,y);
+    line(x+xscale,y, x+xscale/2,y+yscale);
+}
+
+void makeSine(ui) {
+}
+void makeSquare(ui) {
+}
+void makeSaw(ui) {
+}
+void makeTri(ui) {
+}
+void makeGate(ui) {
+}
+
 
 // menu for 
 var addUI = {x:0, y:0, r:40,
              thickness:50,
              display:false,
              margin:10, angleOffset:-PI/2,
-             sections:[{weight:1},
-                       {weight:1},
-                       {weight:1}
+             sections:[{weight:1, callback:makeSine, draw:drawSine},
+                       {weight:1, callback:makeSquare, draw:drawSquare},
+                       {weight:1, callback:makeSaw, draw:drawSaw},
+                       {weight:1, callback:makeTri, draw:drawTri},
+                       {weight:1, callback:makeGate, draw:drawGate},
                       ]};
 
 var editUI = {x:0, y:0, r:30,
@@ -192,7 +261,7 @@ void draw() {
         var node = nodeList[i];
 
         if(node.mouseOver) {
-            println("show influence circle");
+            // println("show influence circle");
             // display an influence circle, opacity
             fill(color(255, 255, 255, 50));
             stroke(color(0,0,0,100));
