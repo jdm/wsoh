@@ -1,3 +1,5 @@
+/* -*- tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 ////////////////////////////////////////////////////////////////////////////////
 // stuff.pjs
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,7 +26,7 @@ void setup() {
     HomeNode.size = centreRadius;
     HomeNode.influence = 200;
     // var center = new Node(cx, cy, Circle, function(){}, {size:centreRadius, influence:200});
-    nodeList.push(center);
+    //nodeList.push(center);
 }
 
 function circle(x,y,radius) {
@@ -48,7 +50,7 @@ void draw() {
         var node = nodeList[i];
 
         if(node.mouseOver) {
-            println("show influence circle");
+            //println("show influence circle");
             // display an influence circle
             fill(color(255, 255, 255, 128));
             circle(node.x, node.y, node.influence);
@@ -67,7 +69,7 @@ void draw() {
     }
 
     // Draw all nodes proper
-    println(nodeList.length);
+    //println(nodeList.length);
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         fill(node.color);
@@ -93,7 +95,7 @@ void mouseClicked() {
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
-            println("intersect");
+            //println("intersect");
             removeNode(i);
             return;
         }
@@ -106,7 +108,7 @@ void mouseClicked() {
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.intersect.call(node, newNode)) {
-            println("node in influence");
+            //println("node in influence");
             node.inputNodes.push(newNode);
         }
     }
