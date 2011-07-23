@@ -102,11 +102,17 @@ function displayUI(ui) {
 
 function pointOnUI(ui, x,y) {
     if(!ui.display)
-        return;
+        return false;
     var d = dist(x,y, ui.x,ui.y);
-    if(d<ui.r+ui.thickness/2 && d>ui.r-ui.thickness/2) {
-        var angle = (atan2(ui.y-y, ui.x-x) + ui.angleOffset + 2*PI) % (2*PI);
-        if(ui.sections) {
+    return d<ui.r+ui.thickness/2 && d>ui.r-ui.thickness/2;
+}
+
+function changeUIState(ui, x,y) {
+    var d = dist(x,y, ui.x,ui.y);
+    var angle = (atan2(ui.y-y,ui.x-x) + ui.angleOffset+2*PI) % (2*PI);
+    if(ui.sections) {
+        // it's a circle menu
+        if(d<ui.r+ui.thickness/2 && d>ui.r-ui.thickness/2) {
             // check where in stuff
             var frac = angle/(2*PI);
             var accWeight = 0, i = 0;
@@ -117,15 +123,21 @@ function pointOnUI(ui, x,y) {
             }
             // just so we can focus some more
             ui.focus = i-1;
-        } else if(ui.value != undefined) {
-            ui.value = angle/(2*PI)*(ui.range[1]-ui.range[0])+ui.range[0];
-            // println(ui.value);
+        } else {
+            ui.focus = -1;
         }
-        return true;
+    } else if(ui.value != undefined) {
+        ui.value = angle/(2*PI)*(ui.range[1]-ui.range[0])+ui.range[0];
+        if(ui.snap){
+            var minDiff = ui.snap[0];
+            for(var i in ui.snap) {
+                if(Math.abs(ui.value-ui.snap[i])<minDiff) {
+                    minDiff = ui.snap[i];
+                }
+            }
+            ui.value = minDiff;
+        }
     }
-    if(ui.sections)
-        ui.focus = -1;
-    return false;
 }
 
 // supposed to be a UI logo element
@@ -221,7 +233,8 @@ var frequencyUI = {x:0, y:0, r:120,
                    thickness:20,
                    display:false,
                    margin:10, angleOffset:-PI/2,
-                   value:35, range:[0,100]};
+                   value:35, range:[0,1000],
+                   snap:[220, 440, 880]};
 
 ////////////////////////////////////////////////////////////////////////////////
 // required by processing.js
@@ -238,6 +251,7 @@ void setup() {
     HomeNode.influence = 200;
 }
 
+// teeny utility fun
 function circle(x,y,radius) {
     ellipse(x,y,2*radius,2*radius);
 }
@@ -322,9 +336,9 @@ void mousePressed() {
     for (int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
-            node.pressed = true;
+            node.click = true;
         } else {
-            node.pressed = false;
+            node.click = false;
         }
     }
     if(pointOnUI(volumeUI, x,y)) {
@@ -349,22 +363,45 @@ void mouseClicked() {
             editUI.x = node.x;
             volumeUI.x = node.x;
             frequencyUI.x = node.x;
+
             editUI.y = node.y;
             volumeUI.y = node.y;
             frequencyUI.y = node.y;
+
             editUI.display = true;
             volumeUI.display = true;
             frequencyUI.display = true;
+
             addUI.display = false;
+
+            editUI.node = node;
+            volumeUI.node = node;
+            frequencyUI.node = node;
             return;
         }
     }
-    if(pointOnUI(editUI, x,y) || 
-       pointOnUI(volumeUI, x,y) || 
-       pointOnUI(frequencyUI, x,y)) {
-        return;
+    if(pointOnUI(editUI, x,y)) {
+        changeUIState(editUI, x,y);
+        if(editUI.focus == 0) {
+            removeNode(nodeList.indexOf(editUI.node));
+            editUI.node.disconnect.call(editUI.node);
+
+            editUI.display = false;
+            editUI.node = undefined;
+
+            volumeUI.display = false;
+            volumeUI.node = undefined;
+            
+            frequencyUI.display = false;
+            frequencyUI.node = undefined;
+            return;
+        }
+    } else if(pointOnUI(volumeUI, x,y)) {
+        changeUIState(volumeUI, x,y);
+    } else if(pointOnUI(frequencyUI, x,y)) {
+        changeUIState(frequencyUI, x,y);
     } else {
-        if(editUI.display) {
+        if(editUI.display) { // proxy for whether edit mode
             editUI.display = false;
             volumeUI.display = false;
             frequencyUI.display = false;
@@ -376,20 +413,22 @@ void mouseClicked() {
         if(pointOnUI(addUI, x,y)) {
             // if it's on the UI, pass on
 
+            changeUIState(addUI,x,y);
             if (mouseButton == LEFT) {
                 //newNode = make_random_osc(x, y);
+                var cx = addUI.x, cy = addUI.y;
                 switch(addUI.focus) {
                 case 0:
-                    newNode = makeSineOsc(x,y, 440, 2);
+                    newNode = makeSineOsc(cx,cy, 440, 2);
                     break;
                 case 1:
-                    newNode = makeSquareOsc(x,y, 440, 2);
+                    newNode = makeSquareOsc(cx,cy, 440, 2);
                     break;
                 case 2:
-                    newNode = makeSawOsc(x,y, 440, 2);
+                    newNode = makeSawOsc(cx,cy, 440, 2);
                     break;
                 case 3:
-                    newNode = makeTriangleOsc(x,y, 440, 2);
+                    newNode = makeTriangleOsc(cx,cy, 440, 2);
                     break;
                 case 4:
                     newNode = makeGate(x, y, 50);
@@ -412,14 +451,12 @@ void mouseClicked() {
     }
 }
 
-/* removeNode(i); node.disconnect.call(node); */
-
 void mouseDragged() {
     var x = mouseX, y = mouseY;
     for(int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
         // do elemental dragging
-        if(node.pressed) {
+        if(node.click) {
             node.x = x;
             node.y = y;
 
@@ -428,15 +465,15 @@ void mouseDragged() {
         }
     }
     if(volumeUI.click)
-        pointOnUI(volumeUI, x,y);
+        changeUIState(volumeUI, x,y);
     if(frequencyUI.click)
-        pointOnUI(frequencyUI, x,y);
+        changeUIState(frequencyUI, x,y);
 }
 
 void mouseReleased() {
     for(int i = 0; i < nodeList.length; i++) {
         var node = nodeList[i];
-        node.pressed = false;
+        node.click = false;
     }
     volumeUI.click = false;
     frequencyUI.click = false;
@@ -453,6 +490,6 @@ void mouseMoved() {
             node.mouseOver = false;
         }
     }
-    pointOnUI(addUI, x,y);
-    pointOnUI(editUI, x,y);
+    changeUIState(addUI, x,y);
+    changeUIState(editUI, x,y);
 }
