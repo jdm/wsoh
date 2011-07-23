@@ -20,7 +20,7 @@ function pointInCircle(x, y) {
 // right now only bounding circles, because multiple shapes are dumb
 // useful for figuring out influences
 function intersectCircles(node) {
-    return dist(this.x,this.y,node.x,node.y)<(node.influence+this.influence);
+    return dist(this.x,this.y,node.x,node.y)<(this.influence+node.size);
 }
 
 var collideFunc = [pointInCircle, pointInSquare];
@@ -49,8 +49,10 @@ function Node(x, y, shape, modifySignal, opts) {
     this.mouseOver = false;
     // intersect fn
     this.intersect = opts.intersect ? opts.intersect : intersectCircles;
-    this.inputNodes = [];
+    // parent nodes that feed into this one
     this.inputs = [];
+    // children nodes that get fed to
+    this.inputNodes = [];
     this.generateSignal = generateSignal;
 }
 
@@ -70,13 +72,10 @@ var nodeList = [];
 
 function addNode(n) {
   nodeList.push(n);
-  nodeList[0].inputNodes.push(n);
-    return n;
+  return n;
 }
 
 function removeNode(i) {
   var node = nodeList[i];
   nodeList.splice(i, 1);
-  var inputNodes = nodeList[0].inputNodes;
-  inputNodes.splice(inputNodes.indexOf(node), 1);
 }
