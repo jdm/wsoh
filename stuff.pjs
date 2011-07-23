@@ -74,8 +74,8 @@ void draw() {
             int dx = parent.x - node.x;
             int dy = parent.y - node.y;
             int norm = dist(0,0, dx,dy);
-            triangle(parent.x + base*dy/norm, parent.y + base*dx/norm,
-                     parent.x - base*dy/norm, parent.y - base*dx/norm,
+            triangle(parent.x + base*dy/norm, parent.y - base*dx/norm,
+                     parent.x - base*dy/norm, parent.y + base*dx/norm,
                      node.x, node.y);
         }
     }
@@ -107,13 +107,14 @@ void mouseClicked() {
         var node = nodeList[i];
         if (node.pointInShape.call(node, mouseX, mouseY)) {
             // remove node, and all inputs
-            for (int j = 0; i < nodeList.length; i++) {
-                var k = nodeList[j].inputNode.indexOf(node);
+            removeNode(i);
+            for (int j = 0; j < nodeList.length; j++) {
+                var k = nodeList[j].inputNodes.indexOf(node);
                 if(k != -1) {
-                    nodeList[j].inputNode.splice(k, 1);
+                    nodeList[j].inputNodes.splice(k, 1);
                 }
             }
-            removeNode(i);
+            println("kill");
             return;
         }
     }
